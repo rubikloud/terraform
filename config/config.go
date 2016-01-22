@@ -803,7 +803,7 @@ func (v *Variable) Type() VariableType {
 // ValidateDefault ensures that default variable value is compatible
 // with the declared type (if one exists)
 func (v *Variable) ValidateDefault() error {
-	if v.DeclaredType == "" {
+	if v.DeclaredType == "" || v.Default == nil {
 		return nil
 	}
 
