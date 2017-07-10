@@ -293,7 +293,7 @@ func validateLambdaFunctionName(v interface{}, k string) (ws []string, errors []
 			"%q cannot be longer than 140 characters: %q", k, value))
 	}
 	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-[a-z]+-\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+	pattern := `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
@@ -398,8 +398,7 @@ func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []
 
 	if ipnet == nil || value != ipnet.String() {
 		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid network CIDR, expected %q, got %q",
-			k, ipnet, value))
+			"%q must contain a valid network CIDR, got %q", k, value))
 	}
 
 	return
@@ -512,6 +511,24 @@ func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, e
 	if err != nil {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be parsed as RFC3339 Timestamp Format", value))
+	}
+
+	return
+}
+
+func validateS3BucketLifecycleExpirationDays(v interface{}, k string) (ws []string, errors []error) {
+	if v.(int) <= 0 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be greater than 0", k))
+	}
+
+	return
+}
+
+func validateS3BucketLifecycleTransitionDays(v interface{}, k string) (ws []string, errors []error) {
+	if v.(int) < 0 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be greater than 0", k))
 	}
 
 	return
@@ -838,6 +855,22 @@ func validateAwsEmrEbsVolumeType(v interface{}, k string) (ws []string, errors [
 	if _, ok := validTypes[value]; !ok {
 		errors = append(errors, fmt.Errorf(
 			"%q must be one of ['gp2', 'io1', 'standard']", k))
+	}
+	return
+}
+
+func validateAwsEmrInstanceGroupRole(v interface{}, k string) (ws []string, errors []error) {
+	validRoles := map[string]struct{}{
+		"MASTER": {},
+		"CORE":   {},
+		"TASK":   {},
+	}
+
+	value := v.(string)
+
+	if _, ok := validRoles[value]; !ok {
+		errors = append(errors, fmt.Errorf(
+			"%q must be one of ['MASTER', 'CORE', 'TASK']", k))
 	}
 	return
 }
